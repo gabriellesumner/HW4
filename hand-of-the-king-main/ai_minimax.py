@@ -32,42 +32,63 @@ def minvalue(board, cards, banners, turn, move):
 
     # Check if we are in a terminal state
     moves = getvalidmoves(board)
-    if len(moves) == 0:
-        board[move] = 0
-        return 1
+    if len(moves) == 0: # if there are no moves left...
+        # board[move] = 0 # 
+        # REVERSE whatever move was taken
+
+        # if AI has more banners, return 1
+        if sum(banners[turn]) > sum(banners[1-turn]):
+            return 1
+        # if other player has more banners, return -1
+        elif sum(banners[1-turn]) > sum(banners[turn]):
+            return -1
+        else: # else tie, return 0
+            return 0
 
     # If not, find minimum utility of possible actions
     value = math.inf
     for move in moves:
-        value = min(value, maxvalue(board, move))
+        value = min(value, maxvalue(board, cards, banners, turn, move))
         # if value <= alpha:
         #     board[action[0], action[1]] = 0
         #     return value
-    board[move] = 0
+    #board[move] = 0
+    # REVERSE MOVES
     return value
 
 
 
-def maxvalue(board, player, action):
+def maxvalue(board, cards, banners, turn, move):
     '''Returns the maximum utility available from a player taking an action on the current board.'''
     # Simulate the action of the current player
     #state = board.copy()
     # simulate
+    sim_move(board, cards, banners, turn, move)
 
     # Check if we are in a terminal state
     moves = getvalidmoves(board)
-    if len(moves) == 0:
-        board[move] = 0
-        return -1
+    if len(moves) == 0: # if there are no moves left...
+        # board[move] = 0 # 
+        # REVERSE whatever move was taken
+
+        # if AI has more banners, return 1
+        if sum(banners[turn]) > sum(banners[1-turn]):
+            return 1
+        # if other player has more banners, return -1
+        elif sum(banners[1-turn]) > sum(banners[turn]):
+            return -1
+        else: # else tie, return 0
+            return 0
 
     # If not, find maximum utility of possible actions
     value = -math.inf
     for move in moves:
-        value = max(value, minvalue(board, move))
-        # if value >= beta:
+        value = max(value, minvalue(board, cards, banners, turn, move))
+        # if value <= alpha:
         #     board[action[0], action[1]] = 0
         #     return value
-    board[move] = 0
+    #board[move] = 0
+    # REVERSE MOVES
     return value
 
 
