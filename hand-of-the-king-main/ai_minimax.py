@@ -29,22 +29,21 @@ def minvalue(board, cards, banners, turn, move):
     # Simulate the action of the current player
     #state = board.copy()
     sim_move(board, cards, banners, turn, move)
-    nextplayer = 3 - player
 
     # Check if we are in a terminal state
-    moves = getvalidmoves(board, nextplayer)
+    moves = getvalidmoves(board)
     if len(moves) == 0:
-        board[action[0], action[1]] = 0
+        board[move] = 0
         return 1
 
     # If not, find minimum utility of possible actions
     value = math.inf
     for move in moves:
-        value = min(value, maxvalue(board, nextplayer, move))
+        value = min(value, maxvalue(board, move))
         # if value <= alpha:
         #     board[action[0], action[1]] = 0
         #     return value
-    board[action[0], action[1]] = 0
+    board[move] = 0
     return value
 
 
@@ -53,23 +52,22 @@ def maxvalue(board, player, action):
     '''Returns the maximum utility available from a player taking an action on the current board.'''
     # Simulate the action of the current player
     #state = board.copy()
-    board[action[0], action[1]] = player
-    nextplayer = 3 - player
+    # simulate
 
     # Check if we are in a terminal state
-    moves = getvalidmoves(board, nextplayer)
+    moves = getvalidmoves(board)
     if len(moves) == 0:
-        board[action[0], action[1]] = 0
+        board[move] = 0
         return -1
 
     # If not, find maximum utility of possible actions
     value = -math.inf
     for move in moves:
-        value = max(value, minvalue(board, nextplayer, move))
+        value = max(value, minvalue(board, move))
         # if value >= beta:
         #     board[action[0], action[1]] = 0
         #     return value
-    board[action[0], action[1]] = 0
+    board[move] = 0
     return value
 
 
