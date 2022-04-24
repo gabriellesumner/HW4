@@ -1,8 +1,6 @@
 # ai_random.py
 # Random AI player for A Game of Thrones: Hand of the King
 
-# change the file
-
 from hand_of_the_king import getvalidmoves
 import pdb
 import random
