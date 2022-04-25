@@ -137,3 +137,53 @@ def sim_move(board, x, collection, turn, banners):
         banners[abs(turn - 1)][color - 2] = 0
     
     return
+
+# Calculates the utility at a specific state
+# Cards is the list of cards each player owns
+# Banners is the list of banners each player has
+# Turn shows which player is currently playing
+def utility(cards, banners, turn):
+    h = 0
+    
+    #Running through each card collection
+    for i in range(len(cards[turn])):
+        # Getting the values of:
+        #  - How many cards you have of this type
+        #  - How many cards your opponent has of this type
+        #  - How many cards you need to have a secured banner
+        yours = cards[turn][i]
+        opponent = cards[1-turn][i]
+        majority = (1+2)//2 + 1
+
+        # If the # of cards you and your opponents have are the same
+        if yours == opponent:
+            # Checking to see if all the cards have been collected
+            if yours + opponent == i + 2:
+                if banners[turn][i] == 1:
+                    h += 1
+                elif banners[1 - turn] == 1:
+                    h -= 1
+            # If you are tied and not all the cards have been collected,
+            # Check to see you was the last one to pick up a card and
+            # Get the banner
+            else:
+                if banners[turn][i] == 1:
+                    h += yours/majority
+                elif banners[1 - turn][i] == 1:
+                    h -= opponent/majority
+
+        # Checks to see who has the either the majority or
+        # Who has the most cards currently
+        elif yours >= majority:
+            h += 1
+        elif opponent >= majority:
+            h -= 1
+        elif yours > opponent:
+            h += yours/majority
+        elif opponent > yours:
+            h -= opponent/majority
+        else:
+            print("None of the conditionals were met when defining the utility")
+    
+    # Return the final heuristic value or the utility of this state
+    return h
