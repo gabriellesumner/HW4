@@ -48,8 +48,7 @@ def minvalue(board, cards, banners, turn, move, player, alpha, beta, start):
     # Check if we are in a terminal state
     moves = getvalidmoves(new_board)
     if len(moves) == 0 or time.time() - start > 30: # if there are no moves left...
-        print(f"time difference is {time.time() - start}")
-        utility(new_cards, new_banners, player)
+        return utility(new_cards, new_banners, player)
 
     # If not, find minimum utility of possible actions
     value = math.inf
@@ -77,7 +76,7 @@ def maxvalue(board, cards, banners, turn, move, player, alpha, beta, start):
     # Check if we are in a terminal state
     moves = getvalidmoves(new_board)
     if len(moves) == 0 or time.time() - start > 30: # if there are no moves left...
-        utility(new_cards, new_banners, player)
+        return utility(new_cards, new_banners, player)
 
     # If not, find maximum utility of possible actions
     value = -math.inf
