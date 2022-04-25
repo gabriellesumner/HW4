@@ -1,3 +1,9 @@
+'''Minimax AI
+Uses simple minimax structure to determine AI moves
+Utility is based off of winning or losing the final game
+Isaac Garay and Gabrielle Sumner
+'''
+
 from hand_of_the_king import getvalidmoves
 import pdb
 import random

@@ -1,3 +1,11 @@
+'''Minimax with pruning, depth-limited, and heuristic AI
+Uses simple minimax structure with alpha/beta pruning to determine AI moves
+Utility is based off of the heuristic which evaluates based on banners permanently owned
+or percentage of the majority for card types
+Isaac Garay and Gabrielle Sumner
+'''
+
+
 from hand_of_the_king import getvalidmoves
 import pdb
 import random
