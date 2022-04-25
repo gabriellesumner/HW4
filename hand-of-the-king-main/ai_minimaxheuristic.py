@@ -164,16 +164,14 @@ def utility(cards, banners, turn):
                 elif banners[1 - turn] == 1:
                     h -= 1
             # If you are tied and not all the cards have been collected,
-            # Check to see you was the last one to pick up a card and
-            # Get the banner
+            # Check to see you was the last one to pick up a card and get the banner
             else:
                 if banners[turn][i] == 1:
                     h += yours/majority
                 elif banners[1 - turn][i] == 1:
                     h -= opponent/majority
 
-        # Checks to see who has the either the majority or
-        # Who has the most cards currently
+        # Checks to see who has the either the majority or who has the most cards currently
         elif yours >= majority:
             h += 1
         elif opponent >= majority:
