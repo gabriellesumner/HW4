@@ -26,67 +26,84 @@ def minimax(board, cards, banners, turn, player):
     best = moves[0]
     alpha = -math.inf
     beta = math.inf
-    start = time.time()
-    value = minvalue(board, cards, banners, turn, best, 1 - player, alpha, beta, start)
+    #start = time.time()
+    depth = 0
+    value = minvalue(board, cards, banners, turn, best, 1 - player, alpha, beta, depth)
     for move in moves[1:]:
-        v = minvalue(board, cards, banners, turn, move, 1 - player, alpha, beta, start)
+        depth = 0
+        #print(f"depth is {depth}")
+        v = minvalue(board, cards, banners, turn, move, 1 - player, alpha, beta, depth)
         if v > value:
             best = move
             value = v
     return best
 
 
-def minvalue(board, cards, banners, turn, move, player, alpha, beta, start):
+def minvalue(board, cards, banners, turn, move, player, alpha, beta, depth):
     '''Returns the minimum utility available from a player taking an action on the current board.'''
     # Simulate the action of the current player
     #state = board.copy()
-    new_board = deepcopy(board)
-    new_cards = deepcopy(cards)
-    new_banners = deepcopy(banners)
-    sim_move(new_board, move, new_cards, player, new_banners)
+    depth += 1
+    #print(f"depth is {depth}")
+    print(f"original board is {board}")
+    board, cards, banners, changes = sim_move(board, move, cards, player, banners)
+    print(f"new board is {board}")
+    board, cards, banners = reverse_move(board, cards, player, banners, changes)
+    print(f"Should be back to original board and is {board}")
+
 
     # Check if we are in a terminal state
-    moves = getvalidmoves(new_board)
-    if len(moves) == 0 or time.time() - start > 30: # if there are no moves left...
-        return utility(new_cards, new_banners, player)
+    moves = getvalidmoves(board)
+    if len(moves) == 0 or depth > 5: # if there are no moves left...
+        board, cards, banners = reverse_move(board, cards, player, banners, changes)
+        return utility(cards, banners, player)
 
     # If not, find minimum utility of possible actions
     value = math.inf
     for move in moves:
-        value = min(value, maxvalue(new_board, new_cards, new_banners, turn, move, 1-player, alpha, beta, start))
+        value = min(value, maxvalue(board, cards, banners, turn, move, 1-player, alpha, beta, depth))
         if value <= alpha:
+            board, cards, banners = reverse_move(board, cards, player, banners, changes)
             return value
         beta = min(beta, value)
     #board[move] = 0
     # REVERSE MOVES
+    # Need reverse move??
+    board, cards, banners = reverse_move(board, cards, player, banners, changes)
     return value
 
 
 
-def maxvalue(board, cards, banners, turn, move, player, alpha, beta, start):
+def maxvalue(board, cards, banners, turn, move, player, alpha, beta, depth):
     '''Returns the maximum utility available from a player taking an action on the current board.'''
     # Simulate the action of the current player
     #state = board.copy()
     # simulate
-    new_board = deepcopy(board)
-    new_cards = deepcopy(cards)
-    new_banners = deepcopy(banners)
-    sim_move(new_board, move, new_cards, player, new_banners)
+    depth += 1
+    #print(f"depth is {depth}")
+    print(f"original board is {board}")
+    board, cards, banners, changes = sim_move(board, move, cards, player, banners)
+    print(f"new board is {board}")
+    board, cards, banners = reverse_move(board, cards, player, banners, changes)
+    print(f"Should be back to original board and is {board}")
 
     # Check if we are in a terminal state
-    moves = getvalidmoves(new_board)
-    if len(moves) == 0 or time.time() - start > 30: # if there are no moves left...
-        return utility(new_cards, new_banners, player)
+    moves = getvalidmoves(board)
+    if len(moves) == 0 or depth > 5: # if there are no moves left...
+        board, cards, banners = reverse_move(board, cards, player, banners, changes)
+        return utility(cards, banners, player)
 
     # If not, find maximum utility of possible actions
     value = -math.inf
     for move in moves:
-        value = max(value, minvalue(new_board, new_cards, new_banners, turn, move, 1 - player, alpha, beta, start))
+        value = max(value, minvalue(board, cards, banners, turn, move, 1 - player, alpha, beta, depth))
         if value <= alpha:
+            board, cards, banners = reverse_move(board, cards, player, banners, changes)
             return value
         beta = max(beta, value)
     #board[move] = 0
     # REVERSE MOVES
+    board, cards, banners = reverse_move(board, cards, player, banners, changes)
     return value
 
 
@@ -95,12 +112,19 @@ def sim_move(board, x, collection, turn, banners):
     cards of the same color along the way. Update the player's card collection accordingly.
     
     Note that x0 is the intial position of the 1-card in the objects array, which we need to correctly move it around.'''
+    # Create a list to keep track of changes (used in reversing the move)
+    changes = []
+
     # Get relevant data
     x1 = board.index(1)  # index of the 1-card on the board
     # print(f'moving from {x1} to {x}')
 
+    # add original location to changes list
+    changes.append(x1)
+
     # Remove captured cards from board
     color = board[x]  # color of the main captured card
+    changes.append(color) # add card # type for captured to changes
     board[x] = 1  # the 1-card moves here
     collection[turn][color - 2] += 1
     if abs(x - x1) < 6:  # move is either left or right
@@ -117,6 +141,7 @@ def sim_move(board, x, collection, turn, banners):
     for i in possible:
         if board[i] == color:
             board[i] = 0  # there is no card in this position anymore
+            changes.append(board[i]) # add the location of captured card to changes
 
     # Move the 1-card to the correct position
     collection[turn][color - 2] += 1
@@ -124,9 +149,44 @@ def sim_move(board, x, collection, turn, banners):
 
     if collection[turn][color - 2] >= collection[abs(turn - 1)][color - 2]:
         banners[turn][color - 2] = 1  # add the banner to the player's collection
-        banners[abs(turn - 1)][color - 2] = 0
+        changes.append(1) # add 1 for player's banner changing
+        if banners[abs(turn - 1)][color - 2] == 0: # if other player doesnt have banner, add 0 to changes
+            changes.append(0)
+        elif banners[abs(turn - 1)][color - 2] == 1: # if other player does have banner, add 1 to changes
+            changes.append(1)
+        banners[abs(turn - 1)][color - 2] = 0 # other player does not have banner
+    else: # else if there are no banner changes, append 0 twice to changes
+        changes.append(0)
+        changes.append(0)
     
-    return
+    return board, collection, banners, changes
+
+def reverse_move(board, cards, player, banners, changes):
+    '''Reverse a move that is kept track of in changes list
+    changes[0] - index of board where card originally was
+    changes[1] - # that corresponds to captured card type (2 more than index in card or banners)
+    changes[2, etc.] - indexes of board where cards were captured
+    changes[-2] - if there was a banner change for player (1 yes, 0 no)
+    changes[-1] - if there was a banner change for other player (1 yes, 0 no)
+    len(changes)-4 - the number of cards that were captured'''
+
+    # Move the player card back to where it was
+    board[changes[0]] = 1
+
+    if changes[-2] == 1: # if banner was changed for the player
+        banners[player][changes[1]-2]=0 # change banner back to 0
+    del changes[-2] # delete it from the list
+
+    if changes[-1] == 1: # if banner was changed for the other player
+        banners[1-player][(changes[1])-2]=1 # change banner back to 1
+    del changes[-1] # delete it from the list
+
+    # Reset the cards to the color they were
+    for i in range (len(changes) -2): # for each captured card
+        board[changes[i+2]]=changes[1] # reset to 0 on the board
+        cards[player][changes[1]-2]-=1 # subtract 1 point for the card
+
+    return board, cards, banners
 
 # Calculates the utility at a specific state
 # Cards is the list of cards each player owns
@@ -170,8 +230,8 @@ def utility(cards, banners, turn):
             h += yours/majority
         # elif opponent > yours:
         #     h -= opponent/majority
-        else:
-            print("None of the conditionals were met when defining the utility")
+        # else:
+        #     print("None of the conditionals were met when defining the utility")
     
     # Return the final heuristic value or the utility of this state
     return h
