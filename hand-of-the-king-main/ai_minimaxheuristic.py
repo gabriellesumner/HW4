@@ -48,7 +48,7 @@ def minvalue(board, cards, banners, turn, move, player, alpha, beta, start):
     # Check if we are in a terminal state
     moves = getvalidmoves(new_board)
     if len(moves) == 0 or time.time() - start > 30: # if there are no moves left...
-        utility(new_cards, new_banners, player)
+        return utility(new_cards, new_banners, player)
 
     # If not, find minimum utility of possible actions
     value = math.inf
@@ -76,7 +76,7 @@ def maxvalue(board, cards, banners, turn, move, player, alpha, beta, start):
     # Check if we are in a terminal state
     moves = getvalidmoves(new_board)
     if len(moves) == 0 or time.time() - start > 30: # if there are no moves left...
-        utility(new_cards, new_banners, player)
+        return utility(new_cards, new_banners, player)
 
     # If not, find maximum utility of possible actions
     value = -math.inf
@@ -128,10 +128,8 @@ def sim_move(board, x, collection, turn, banners):
     
     return
 
-# Calculates the utility at a specific state
-# Cards is the list of cards each player owns
-# Banners is the list of banners each player has
-# Turn shows which player is currently playing
+''' Calculates the utility at a specific state. Cards is the list of cards each player owns
+Banners is the list of banners each player has. Turn shows which player is currently playing'''
 def utility(cards, banners, turn):
     h = 0
     
