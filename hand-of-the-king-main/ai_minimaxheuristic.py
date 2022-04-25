@@ -11,6 +11,7 @@ import pdb
 import random
 import math
 from copy import deepcopy
+import time
 
 
 def get_computer_move(board, cards, banners, turn):
@@ -25,16 +26,17 @@ def minimax(board, cards, banners, turn, player):
     best = moves[0]
     alpha = -math.inf
     beta = math.inf
-    value = minvalue(board, cards, banners, turn, best, 1 - player, alpha, beta)
+    start = time.time()
+    value = minvalue(board, cards, banners, turn, best, 1 - player, alpha, beta, start)
     for move in moves[1:]:
-        v = minvalue(board, cards, banners, turn, move, 1 - player, alpha, beta)
+        v = minvalue(board, cards, banners, turn, move, 1 - player, alpha, beta, start)
         if v > value:
             best = move
             value = v
     return best
 
 
-def minvalue(board, cards, banners, turn, move, player, alpha, beta):
+def minvalue(board, cards, banners, turn, move, player, alpha, beta, start):
     '''Returns the minimum utility available from a player taking an action on the current board.'''
     # Simulate the action of the current player
     #state = board.copy()
@@ -45,23 +47,13 @@ def minvalue(board, cards, banners, turn, move, player, alpha, beta):
 
     # Check if we are in a terminal state
     moves = getvalidmoves(new_board)
-    if len(moves) == 0: # if there are no moves left...
-        # board[move] = 0 # 
-        # REVERSE whatever move was taken
-
-        # if AI has more banners, return 1
-        if sum(new_banners[turn]) > sum(new_banners[1-turn]):
-            return 1
-        # if other player has more banners, return -1
-        elif sum(new_banners[1-turn]) > sum(new_banners[turn]):
-            return -1
-        else: # else tie, return 0
-            return 0
+    if len(moves) == 0 or time.time() - start > 30: # if there are no moves left...
+        utility(new_cards, new_banners, player)
 
     # If not, find minimum utility of possible actions
     value = math.inf
     for move in moves:
-        value = min(value, maxvalue(new_board, new_cards, new_banners, turn, move, 1-player, alpha, beta))
+        value = min(value, maxvalue(new_board, new_cards, new_banners, turn, move, 1-player, alpha, beta, start))
         if value <= alpha:
             return value
         beta = min(beta, value)
@@ -71,7 +63,7 @@ def minvalue(board, cards, banners, turn, move, player, alpha, beta):
 
 
 
-def maxvalue(board, cards, banners, turn, move, player, alpha, beta):
+def maxvalue(board, cards, banners, turn, move, player, alpha, beta, start):
     '''Returns the maximum utility available from a player taking an action on the current board.'''
     # Simulate the action of the current player
     #state = board.copy()
@@ -83,23 +75,13 @@ def maxvalue(board, cards, banners, turn, move, player, alpha, beta):
 
     # Check if we are in a terminal state
     moves = getvalidmoves(new_board)
-    if len(moves) == 0: # if there are no moves left...
-        # board[move] = 0 # 
-        # REVERSE whatever move was taken
-
-        # if AI has more banners, return 1
-        if sum(new_banners[turn]) > sum(new_banners[1-turn]):
-            return 1
-        # if other player has more banners, return -1
-        elif sum(new_banners[1-turn]) > sum(new_banners[turn]):
-            return -1
-        else: # else tie, return 0
-            return 0
+    if len(moves) == 0 or time.time() - start > 30: # if there are no moves left...
+        utility(new_cards, new_banners, player)
 
     # If not, find maximum utility of possible actions
     value = -math.inf
     for move in moves:
-        value = max(value, minvalue(new_board, new_cards, new_banners, turn, move, 1 - player, alpha, beta))
+        value = max(value, minvalue(new_board, new_cards, new_banners, turn, move, 1 - player, alpha, beta, start))
         if value <= alpha:
             return value
         beta = max(beta, value)
