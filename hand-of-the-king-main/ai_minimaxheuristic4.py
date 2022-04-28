@@ -1,0 +1,171 @@
+'''Minimax with pruning, depth-limited, and heuristic AI
+Uses simple minimax structure with alpha/beta pruning to determine AI moves
+Utility is based off of the heuristic which evaluates based on banners permanently owned
+or percentage of the majority for card types
+Isaac Garay and Gabrielle Sumner
+'''
+
+
+from os import major
+from hand_of_the_king import getvalidmoves
+import pdb
+import random
+import math
+from copy import deepcopy
+import time
+
+
+def get_computer_move(board, cards, banners, turn):
+    '''Randomly select a move from the set of valid moves.'''
+    player = turn
+    return minimax(board, cards, banners, turn, player)
+
+
+def minimax(board, cards, banners, turn, player):
+    '''Returns the best action from a given state in the game for a specific player.'''
+    moves = getvalidmoves(board)
+    best = moves[0]
+    alpha = -math.inf
+    beta = math.inf
+    endTime = time.time() + 30
+    dividedTime = (endTime - time.time())/len(moves)
+    count = len(moves) - 1
+    value = minvalue(board, cards, banners, turn, best, 1 - player, alpha, beta, endTime - dividedTime*count)
+    count -= 1
+    for move in moves[1:]:
+        v = minvalue(board, cards, banners, turn, move, 1 - player, alpha, beta, endTime - dividedTime*count)
+        if v > value:
+            best = move
+            value = v
+        count -= 1
+    return best
+
+#endTime is time.time() + 30
+#original is the time.time() when minimax started
+def minvalue(board, cards, banners, turn, move, player, alpha, beta, endTime):
+    '''Returns the minimum utility available from a player taking an action on the current board.'''
+    # Simulate the action of the current player
+    #state = board.copy()
+    start = time.time()
+    new_board = deepcopy(board)
+    new_cards = deepcopy(cards)
+    new_banners = deepcopy(banners)
+    sim_move(new_board, move, new_cards, player, new_banners)
+
+    # Check if we are in a terminal state
+    moves = getvalidmoves(new_board)
+    if len(moves) == 0 or time.time() >= endTime: # if there are no moves left...
+        return utility(new_cards, new_banners, player)
+
+    # If not, find minimum utility of possible actions
+    value = math.inf
+    count = len(moves) - 1
+    dividedTime = (endTime - time.time())/len(moves)
+    for move in moves:
+        value = min(value, maxvalue(new_board, new_cards, new_banners, turn, move, 1-player, alpha, beta, endTime - dividedTime*count))
+        if value <= alpha:
+            return value
+        beta = min(beta, value)
+        if (time.time() >= endTime):
+            return value
+        count -= 1
+    #board[move] = 0
+    # REVERSE MOVES
+    return value
+
+
+
+def maxvalue(board, cards, banners, turn, move, player, alpha, beta, endTime):
+    '''Returns the maximum utility available from a player taking an action on the current board.'''
+    # Simulate the action of the current player
+    #state = board.copy()
+    # simulate
+    start = time.time()
+    new_board = deepcopy(board)
+    new_cards = deepcopy(cards)
+    new_banners = deepcopy(banners)
+    sim_move(new_board, move, new_cards, player, new_banners)
+
+    # Check if we are in a terminal state
+    moves = getvalidmoves(new_board)
+    if len(moves) == 0 or time.time() >= endTime: # if there are no moves left...
+        return utility(new_cards, new_banners, player)
+
+    # If not, find maximum utility of possible actions
+    value = -math.inf
+    count = len(moves) - 1
+    dividedTime = (endTime - time.time())/len(moves)
+    for move in moves:
+        value = max(value, minvalue(new_board, new_cards, new_banners, turn, move, 1-player, alpha, beta, endTime - dividedTime*count))
+        if value <= alpha:
+            return value
+        beta = min(beta, value)
+        if (time.time() >= endTime):
+            return value
+        count -= 1
+    #board[move] = 0
+    # REVERSE MOVES
+    return value
+
+
+def sim_move(board, x, collection, turn, banners):
+    '''Move the 1-card in the GUI to the position on the board specified by the input index, capturing
+    cards of the same color along the way. Update the player's card collection accordingly.
+    
+    Note that x0 is the intial position of the 1-card in the objects array, which we need to correctly move it around.'''
+    # Get relevant data
+    x1 = board.index(1)  # index of the 1-card on the board
+    # print(f'moving from {x1} to {x}')
+
+    # Remove captured cards from board
+    color = board[x]  # color of the main captured card
+    board[x] = 1  # the 1-card moves here
+    collection[turn][color - 2] += 1
+    if abs(x - x1) < 6:  # move is either left or right
+        if x < x1:  # left
+            possible = range(x + 1, x1)
+        else:  # right
+            possible = range(x1 + 1, x)
+    else:  # move is either up or down
+        if x < x1:  # up
+            possible = range(x + 6, x1, 6)
+        else:  # down
+            possible = range(x1 + 6, x, 6)
+
+    for i in possible:
+        if board[i] == color:
+            board[i] = 0  # there is no card in this position anymore
+
+    # Move the 1-card to the correct position
+    collection[turn][color - 2] += 1
+    board[x1] = 0
+
+    if collection[turn][color - 2] >= collection[abs(turn - 1)][color - 2]:
+        banners[turn][color - 2] = 1  # add the banner to the player's collection
+        banners[abs(turn - 1)][color - 2] = 0
+    
+    return
+
+''' Calculates the utility at a specific state. Cards is the list of cards each player owns
+Banners is the list of banners each player has. Turn shows which player is currently playing'''
+def utility(cards, banners, turn):
+    h = 0
+    
+    for i in range(len(banners)):
+        majority = (i+2)//2 + 1  # How many cards does it take to secure the banner
+
+        #Check to see if you own the banner
+        if banners[i] == 1:
+            h += 1
+
+            # Checking if you have the majority of the cards or not
+            if cards[turn][i] >= majority:
+                h += 1
+            else:
+                h += cards[turn][i] / majority     
+        
+        #As long as the opponent doesn't have the majority
+        elif not(cards[1 - turn][i] >= majority):
+            h += cards[turn][i] / majority
+        
+    return h
