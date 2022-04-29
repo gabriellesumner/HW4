@@ -45,17 +45,16 @@ def minvalue(board, cards, banners, turn, move, player, alpha, beta, depth):
     #state = board.copy()
     depth += 1
     #print(f"depth is {depth}")
-    print(f"original board is {board}")
-    board, cards, banners, changes = sim_move(board, move, cards, player, banners)
-    print(f"new board is {board}")
-    board, cards, banners = reverse_move(board, cards, player, banners, changes)
-    print(f"Should be back to original board and is {board}")
+    #print(f"original board is {banners}")
+    changes = sim_move(board, move, cards, player, banners)
+    #print(f"new board is {banners}")
 
 
     # Check if we are in a terminal state
     moves = getvalidmoves(board)
     if len(moves) == 0 or depth > 5: # if there are no moves left...
-        board, cards, banners = reverse_move(board, cards, player, banners, changes)
+        reverse_move(board, cards, player, banners, changes)
+        #print(f"Should be back to original board and is {banners}")
         return utility(cards, banners, player)
 
     # If not, find minimum utility of possible actions
@@ -63,13 +62,15 @@ def minvalue(board, cards, banners, turn, move, player, alpha, beta, depth):
     for move in moves:
         value = min(value, maxvalue(board, cards, banners, turn, move, 1-player, alpha, beta, depth))
         if value <= alpha:
-            board, cards, banners = reverse_move(board, cards, player, banners, changes)
+            reverse_move(board, cards, player, banners, changes)
+            #print(f"Should be back to original board and is {banners}")
             return value
         beta = min(beta, value)
     #board[move] = 0
     # REVERSE MOVES
     # Need reverse move??
-    board, cards, banners = reverse_move(board, cards, player, banners, changes)
+    reverse_move(board, cards, player, banners, changes)
+    #print(f"Should be back to original board and is {banners}")
     return value
 
 
@@ -81,16 +82,15 @@ def maxvalue(board, cards, banners, turn, move, player, alpha, beta, depth):
     # simulate
     depth += 1
     #print(f"depth is {depth}")
-    print(f"original board is {board}")
-    board, cards, banners, changes = sim_move(board, move, cards, player, banners)
-    print(f"new board is {board}")
-    board, cards, banners = reverse_move(board, cards, player, banners, changes)
-    print(f"Should be back to original board and is {board}")
+    #print(f"original board is {banners}")
+    changes = sim_move(board, move, cards, player, banners)
+    #print(f"new board is {banners}")
 
     # Check if we are in a terminal state
     moves = getvalidmoves(board)
     if len(moves) == 0 or depth > 5: # if there are no moves left...
-        board, cards, banners = reverse_move(board, cards, player, banners, changes)
+        reverse_move(board, cards, player, banners, changes)
+        #print(f"Should be back to original board and is {banners}")
         return utility(cards, banners, player)
 
     # If not, find maximum utility of possible actions
@@ -98,12 +98,14 @@ def maxvalue(board, cards, banners, turn, move, player, alpha, beta, depth):
     for move in moves:
         value = max(value, minvalue(board, cards, banners, turn, move, 1 - player, alpha, beta, depth))
         if value <= alpha:
-            board, cards, banners = reverse_move(board, cards, player, banners, changes)
+            reverse_move(board, cards, player, banners, changes)
+            #print(f"Should be back to original board and is {banners}")
             return value
         beta = max(beta, value)
     #board[move] = 0
     # REVERSE MOVES
-    board, cards, banners = reverse_move(board, cards, player, banners, changes)
+    reverse_move(board, cards, player, banners, changes)
+    #print(f"Should be back to original board and is {banners}")
     return value
 
 
@@ -116,6 +118,7 @@ def sim_move(board, x, collection, turn, banners):
     changes = []
 
     # Get relevant data
+    print(board)
     x1 = board.index(1)  # index of the 1-card on the board
     # print(f'moving from {x1} to {x}')
 
@@ -159,7 +162,7 @@ def sim_move(board, x, collection, turn, banners):
         changes.append(0)
         changes.append(0)
     
-    return board, collection, banners, changes
+    return changes
 
 def reverse_move(board, cards, player, banners, changes):
     '''Reverse a move that is kept track of in changes list
@@ -170,8 +173,11 @@ def reverse_move(board, cards, player, banners, changes):
     changes[-1] - if there was a banner change for other player (1 yes, 0 no)
     len(changes)-4 - the number of cards that were captured'''
 
-    # Move the player card back to where it was
-    board[changes[0]] = 1
+    print(f"Changes will be reversed: {changes}")
+    # Change current 1 card spot to old color
+    board[board.index(1)]=changes[1]
+    cards[player][changes[1]-2]-=1 #
+    
 
     if changes[-2] == 1: # if banner was changed for the player
         banners[player][changes[1]-2]=0 # change banner back to 0
@@ -183,8 +189,15 @@ def reverse_move(board, cards, player, banners, changes):
 
     # Reset the cards to the color they were
     for i in range (len(changes) -2): # for each captured card
-        board[changes[i+2]]=changes[1] # reset to 0 on the board
+        board[changes[i+2]]=changes[1] # reset to previous color on the board
+        print(board)
         cards[player][changes[1]-2]-=1 # subtract 1 point for the card
+
+    # Move the player card back to where it was
+    board[changes[0]] = 1
+    print(f"board is being changed back to 1 at {changes[0]}")
+    print(f"board is now {board[changes[0]]} at {changes[0]}")
+    print(board)
 
     return board, cards, banners
 
