@@ -196,17 +196,40 @@ def utility(cards, banners, turn):
     
     for i in range(len(banners)):
         majority = (i+2)//2 + 1  # How many cards does it take to secure the banner
+        collected = cards[turn][i] + cards[1 - turn][i]
 
         #Check to see if you own the banner
-        if banners[i] == 1:
+        if banners[turn][i] == 1:
             h += 1
 
             # Checking if you have the majority of the cards or not
             if cards[turn][i] >= majority:
                 h += 1
             else:
-                h += cards[turn][i] / majority     
+                h += cards[turn][i] / majority
+
+        #As long as the opponent doesn't have the majority
+        elif not(cards[1 - turn][i] >= majority):
+            h += cards[turn][i] / majority
         
+    return h
+
+def utility3(cards, banners, turn):
+    h = 0
+    
+    for i in range(len(banners)):
+        majority = (i+2)//2 + 1  # How many cards does it take to secure the banner
+
+        #Check to see if you own the banner
+        if banners[turn][i] == 1:
+            h += 1
+
+            # Checking if you have the majority of the cards or not
+            if cards[turn][i] >= majority:
+                h += 1
+            else:
+                h += cards[turn][i] / majority
+
         #As long as the opponent doesn't have the majority
         elif not(cards[1 - turn][i] >= majority):
             h += cards[turn][i] / majority
